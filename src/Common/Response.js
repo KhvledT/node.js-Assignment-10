@@ -11,31 +11,35 @@ export const globalErrorHandler = (error, req, res, next) => {
         .json({ message: error.message || "something went wrong!" });
 };
 
-export const successResponse = (
-  {res,
+export const successResponse = ({
+  res,
   data,
   message = "Success",
-  statusCode = 200,}
-) => {
+  statusCode = 200,
+}) => {
   res.status(statusCode).json({ message, data });
 };
 
 export const errorResponse = (message = "Error", statusCode = 500) => {
-  throw new Error(message, { cause: statusCode });
+  throw new Error(message, { cause: { status: statusCode } });
 };
 
 export const notFoundResponse = (message = "Not Found") => {
-  throw new Error(message, { cause: 404 });
+  throw new Error(message, { cause: { status: 404 } });
 };
 
 export const badRequestResponse = (message = "Bad Request") => {
-  throw new Error(message, { cause: 400 });
+  throw new Error(message, { cause: { status: 400 } });
 };
 
 export const unauthorizedResponse = (message = "Unauthorized") => {
-  throw new Error(message, { cause: 401 });
+  throw new Error(message, { cause: { status: 401 } });
 };
 
 export const conflictResponse = (message = "Conflict") => {
-  throw new Error(message, { cause: 409 });
+  throw new Error(message, { cause: { status: 409 } });
+};
+
+export const validationErrorResponse = (error) => {
+  throw new Error(error.message, { cause: { status: 422 } });
 };

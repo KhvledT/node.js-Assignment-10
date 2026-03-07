@@ -8,8 +8,9 @@ import {
   NODEMAILER_USER,
   NODEMAILER_PASS,
 } from "../../../config/config.service.js";
-import { roleEnum } from "../../Common/enum.js";
+import { providerEnum, roleEnum } from "../../Common/enum.js";
 import {
+  badRequestResponse,
   conflictResponse,
   unauthorizedResponse,
 } from "../../Common/Response.js";
@@ -18,9 +19,14 @@ import bcrypt from "bcrypt";
 import CryptoJS from "crypto-js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import { generateToken, verifyGoogleToken } from "../../helpers/auth.helper.js";
 
 // logic
-export async function registerUser(userData) {
+export async function registerUser(userData, file) {
+
+  // لسه هناخد بقا هنحط الفايل دا ازاي ع السيرفر
+  // file
+  
   const { name, email, role, password, phone } = userData;
 
   const existingUser = await UserModel.findOne({ email });
@@ -61,9 +67,9 @@ export async function registerUser(userData) {
   });
 
   await transporter.sendMail({
-    from: `"خالد بيمسي" <${process.env.EMAIL}>`,
+    from: `Saraha App`,
     to: email,
-    subject: "Your Verification Code",
+    subject: "Your Verification Code for Saraha App",
     html: `<h2>Your OTP is: ${otp}</h2>`,
   });
 
@@ -104,8 +110,8 @@ export async function loginUser(loginData) {
   if (!user) {
     unauthorizedResponse("Invalid email or password");
   }
-  if(!user.isVerified){
-    unauthorizedResponse("your account isn't verified")
+  if (!user.isVerified) {
+    unauthorizedResponse("your account isn't verified");
   }
 
   // compare password
@@ -114,35 +120,60 @@ export async function loginUser(loginData) {
     unauthorizedResponse("Invalid email or password");
   }
 
-  let secretAccessKey = "";
-  let secretRefreshKey = "";
-  switch (user.role) {
-    case roleEnum.USER:
-      secretAccessKey = JWT_SECRET_ACCESS_USER;
-      secretRefreshKey = JWT_SECRET_REFRESH_USER;
-      break;
+  return generateToken(user);
+}
 
-    case roleEnum.ADMIN:
-      secretAccessKey = JWT_SECRET_ACCESS_ADMIN;
-      secretRefreshKey = JWT_SECRET_REFRESH_ADMIN;
-      break;
+export async function signupWithGoogle(googleData, type = "signed up") {
+  const { idToken } = googleData;
+
+  if (!idToken) {
+    badRequestResponse("idToken is required");
+  }
+  const payload = await verifyGoogleToken(idToken);
+
+  if (!payload.email_verified) {
+    badRequestResponse("Google account email not verified");
   }
 
-  // generate access token
-  const accessToken = jwt.sign({}, secretAccessKey, {
-    audience: user.role,
-    expiresIn: "1h",
-    subject: user._id.toString(),
-  });
+  const user = await UserModel.findOne({ email: payload.email });
+  if (user) {
+    if (user.provider === providerEnum.SYSTEM) {
+      badRequestResponse(
+        "User already exists with this email, login with email and password",
+      );
+    }
+    return loginWithGoogle(googleData);
+  }
 
-  // generate refresh token
-  const refreshToken = jwt.sign({}, secretRefreshKey, {
-    audience: user.role,
-    expiresIn: "1y",
-    subject: user._id.toString(),
+  await UserModel.create({
+    name: payload?.name,
+    email: payload?.email,
+    picture: payload?.picture,
+    provider: providerEnum.GOOGLE,
+    isVerified: true,
   });
+  return loginWithGoogle(googleData , type);
+}
 
-  return { accessToken, refreshToken };
+export async function loginWithGoogle(googleData, type = "logged in") {
+  const { idToken } = googleData;
+  if (!idToken) {
+    badRequestResponse("idToken is required");
+  }
+  const payload = await verifyGoogleToken(idToken);
+
+  if (!payload.email_verified) {
+    badRequestResponse("Google account email not verified");
+  }
+
+  const user = await UserModel.findOne({ email: payload.email, provider: providerEnum.GOOGLE });
+  if (!user) {
+    return signupWithGoogle(googleData);
+  }
+
+  const { accessToken, refreshToken } = generateToken(user);
+
+  return { accessToken, refreshToken , type};
 }
 
 export async function refreshToken(refreshToken) {

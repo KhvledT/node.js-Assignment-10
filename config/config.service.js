@@ -19,3 +19,4 @@ export const JWT_SECRET_REFRESH_USER = process.env.JWT_SECRET_REFRESH_USER;
 export const JWT_SECRET_REFRESH_ADMIN = process.env.JWT_SECRET_REFRESH_ADMIN;
 export const NODEMAILER_USER = process.env.NODEMAILER_USER
 export const NODEMAILER_PASS = process.env.NODEMAILER_PASS
+export const WEB_CLIENT_ID = process.env.WEB_CLIENT_ID

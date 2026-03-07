@@ -3,12 +3,14 @@ import authRouter from './Modules/Auth/auth.controller.js';
 import { DB_Connection } from './DB/connection.js';
 import { globalErrorHandler } from './Common/Response.js';
 import userRouter from './Modules/user/user.controller.js';
+import cors from 'cors';
 
 function bootstrap() {
     const app = express();
     const port = 3000;
     DB_Connection()
     app.use(express.json());
+    app.use(cors());
     app.use("/auth" , authRouter);
     app.use("/user" , userRouter);
 
