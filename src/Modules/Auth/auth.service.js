@@ -23,9 +23,7 @@ import { generateToken, verifyGoogleToken } from "../../helpers/auth.helper.js";
 
 // logic
 export async function registerUser(userData, file) {
-
-  // لسه هناخد بقا هنحط الفايل دا ازاي ع السيرفر
-  // file
+  console.log(file);
   
   const { name, email, role, password, phone } = userData;
 
@@ -62,6 +60,7 @@ export async function registerUser(userData, file) {
     password: hashedPassword,
     phone: encryptedPhone,
     otp: hashedOtp,
+    picture: file.destination + "/" + file.filename || "",
     otpExpires: Date.now() + 10 * 60 * 1000, // 10 دقائق
     isVerified: false,
   });
@@ -152,7 +151,7 @@ export async function signupWithGoogle(googleData, type = "signed up") {
     provider: providerEnum.GOOGLE,
     isVerified: true,
   });
-  return loginWithGoogle(googleData , type);
+  return loginWithGoogle(googleData, type);
 }
 
 export async function loginWithGoogle(googleData, type = "logged in") {
@@ -166,14 +165,17 @@ export async function loginWithGoogle(googleData, type = "logged in") {
     badRequestResponse("Google account email not verified");
   }
 
-  const user = await UserModel.findOne({ email: payload.email, provider: providerEnum.GOOGLE });
+  const user = await UserModel.findOne({
+    email: payload.email,
+    provider: providerEnum.GOOGLE,
+  });
   if (!user) {
     return signupWithGoogle(googleData);
   }
 
   const { accessToken, refreshToken } = generateToken(user);
 
-  return { accessToken, refreshToken , type};
+  return { accessToken, refreshToken, type };
 }
 
 export async function refreshToken(refreshToken) {

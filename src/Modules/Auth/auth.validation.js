@@ -1,5 +1,6 @@
 import Joi from "joi";
 import { roleEnum } from "../../Common/enum.js";
+import { allowedTypes } from "../../Common/Multer/multer.config.js";
 
 export const registerSchema = Joi.object({
   name: Joi.string().alphanum().min(3).max(30).required(),
@@ -16,8 +17,19 @@ export const registerSchema = Joi.object({
     .default(roleEnum.USER),
 
   phone: Joi.string().pattern(new RegExp("^01[0125][0-9]{8}$")).required(),
+});
 
-  picture: Joi.string().uri(),
+export const pictureSchema = Joi.object({
+    fieldname: Joi.string().required(),
+    originalname: Joi.string().required(),
+    encoding: Joi.string().required(),
+    mimetype: Joi.string()
+      .valid(...Object.values(allowedTypes.img))
+      .required(),
+    destination: Joi.string().required(),
+    filename: Joi.string().required(),
+    path: Joi.string().required(),
+    size: Joi.number().required(),
 });
 
 export const loginSchema = Joi.object({
@@ -29,4 +41,3 @@ export const loginSchema = Joi.object({
   password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{3,30}$")),
   repeat_password: Joi.ref("password"),
 });
-

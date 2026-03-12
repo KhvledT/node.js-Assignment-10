@@ -4,6 +4,7 @@ import { DB_Connection } from './DB/connection.js';
 import { globalErrorHandler } from './Common/Response.js';
 import userRouter from './Modules/user/user.controller.js';
 import cors from 'cors';
+import path from 'path';
 
 function bootstrap() {
     const app = express();
@@ -13,6 +14,8 @@ function bootstrap() {
     app.use(cors());
     app.use("/auth" , authRouter);
     app.use("/user" , userRouter);
+    app.use("/uploads", express.static(path.resolve("./uploads")));
+    
 
 
 
