@@ -23,7 +23,6 @@ import { generateToken, verifyGoogleToken } from "../../helpers/auth.helper.js";
 
 // logic
 export async function registerUser(userData, file) {
-  console.log(file);
   
   const { name, email, role, password, phone } = userData;
 
