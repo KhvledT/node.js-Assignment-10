@@ -29,8 +29,15 @@ const userSchema = new mongoose.Schema(
         return this.provider === providerEnum.SYSTEM;
       },
     },
-    picture: {
+    profilePicture: {
       type: String,
+    },
+    coverPictures: {
+      type: [String],
+    },
+    profileVisitor: {
+      type: Number,
+      default: 0,
     },
     provider: {
       type: String,

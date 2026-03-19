@@ -22,7 +22,7 @@ import nodemailer from "nodemailer";
 import { generateToken, verifyGoogleToken } from "../../helpers/auth.helper.js";
 
 // logic
-export async function registerUser(userData, file) {
+export async function registerUser(userData) {
   
   const { name, email, role, password, phone } = userData;
 
@@ -59,7 +59,6 @@ export async function registerUser(userData, file) {
     password: hashedPassword,
     phone: encryptedPhone,
     otp: hashedOtp,
-    picture: file.destination + "/" + file.filename || "",
     otpExpires: Date.now() + 10 * 60 * 1000, // 10 دقائق
     isVerified: false,
   });

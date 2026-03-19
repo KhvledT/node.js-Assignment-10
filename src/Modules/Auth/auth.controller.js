@@ -9,20 +9,14 @@ import {
 } from "./auth.service.js";
 import { successResponse } from "../../Common/Response.js";
 import { validation } from "../../middleware/validation.middleware.js";
-import { loginSchema, pictureSchema, registerSchema } from "./auth.validation.js";
-import localPayload, {
-  allowedTypes,
-} from "../../Common/Multer/multer.config.js";
+import { loginSchema, registerSchema } from "./auth.validation.js";
 const authRouter = express.Router();
 
 authRouter.post(
   "/register",
-  localPayload({ fileDist: "user", allowedMimeTypes: allowedTypes.img }).single(
-    "picture",
-  ),
-  validation(registerSchema,pictureSchema),
+  validation({registerSchema}),
   async (req, res) => {
-    const result = await registerUser(req.body , req.file);
+    const result = await registerUser(req.body);
 
     successResponse({
       res,
@@ -32,7 +26,7 @@ authRouter.post(
   },
 );
 
-authRouter.post("/login", validation(loginSchema), async (req, res) => {
+authRouter.post("/login", validation({loginSchema}), async (req, res) => {
   const result = await loginUser(req.body);
   successResponse({
     res,
