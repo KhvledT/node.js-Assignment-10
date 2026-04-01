@@ -5,11 +5,14 @@ import {
 import { roleEnum } from "../Common/enum.js";
 import { unauthorizedResponse } from "../Common/Response.js";
 import jwt from "jsonwebtoken";
+import TokenModel from "../DB/Models/token.model.js";
+import { UserModel } from "../DB/Models/user.model.js";
+import * as Redis from "../DB/redis.service.js";
 
-export const verifyToken = (req, res, next) => {
+export const authentication = async (req, res, next) => {
   const authorization = req.headers["authorization"];
   if (!authorization) {
-    unauthorizedResponse("No token provided");
+    return unauthorizedResponse("No token provided");
   }
   const token = authorization.split(" ")[1];
 
@@ -25,11 +28,34 @@ export const verifyToken = (req, res, next) => {
       break;
   }
 
-  const verify = jwt.verify(token, secretAccessKey);
+  const verifyToken = jwt.verify(token, secretAccessKey);
 
-  if (!verify) {
-    unauthorizedResponse("Invalid token");
+  if (!verifyToken) {
+    return unauthorizedResponse("Invalid token");
   }
-  req.user = verify;
+
+  // if (await TokenModel.findOne({ jti: decodedToken.jti })) {
+  //   unauthorizedResponse("You have been logged out, please login again");
+  // }
+
+  if(await Redis.get(Redis.black_List_Token_Key(decodedToken.sub, decodedToken.jti))){
+    return unauthorizedResponse("You have been logged out, please login again");
+  }
+
+  const user = await UserModel.findById(verifyToken.sub);
+
+  if (!user) {
+    return unauthorizedResponse("User not found");
+  }
+
+  if (verifyToken.iat * 1000 < user.changeCreditTime) {
+    return unauthorizedResponse(
+      "You have been logged out from all devices, please login again",
+    );
+  }
+
+  req.user = verifyToken;
+  req.tokenPayload = decodedToken;
+
   next();
 };

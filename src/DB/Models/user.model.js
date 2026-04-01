@@ -44,10 +44,14 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(providerEnum),
       default: providerEnum.SYSTEM,
     },
-
+    changeCreditTime: String,
     otp: String,
     otpExpires: Date,
     isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    Apply_Two_Step_Verification: {
       type: Boolean,
       default: false,
     },
@@ -56,5 +60,7 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+// Index to automatically delete unverified users after 24 hours
+userSchema.index("isVerified", { expireAfterSeconds: 60 * 60 * 24 }); // 24 hours
 
 export const UserModel = mongoose.model("User", userSchema);
